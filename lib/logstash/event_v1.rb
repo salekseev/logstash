@@ -92,7 +92,19 @@ module LogStash::EventV1
   # field-related access
   public
   def [](key)
-    @data[key]
+    if key[0] == '['
+      val = @data
+      key.gsub(/(?<=\[).+?(?=\])/).each do |tok|
+        if val.is_a? Array
+          val = val[tok.to_i]
+        else
+          val = val[tok]
+        end
+      end
+      return val
+    else
+      return @data[key]
+    end
   end # def []
   
   public
@@ -183,12 +195,8 @@ module LogStash::EventV1
           format = key[1 .. -1]
           datetime.toString(format) # return requested time format
         end
-      elsif key[0,1] == "+["
-
       else
-        # Use an event field.
         value = self[key]
-        puts key
         case value
         when nil
           tok # leave the %{foo} if this field does not exist in this event.
