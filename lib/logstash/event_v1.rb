@@ -30,6 +30,13 @@ require "uri"
 module LogStash::EventV1
   class DeprecatedMethod < StandardError; end
 
+  if defined?(RUBY_ENGINE) && RUBY_ENGINE == "jruby"
+    @@date_parser = Java::org.joda.time.format.ISODateTimeFormat.dateTimeParser.withOffsetParsed
+  else
+    # TODO(sissel): LOGSTASH-217
+    @@date_parser ||= nil
+  end
+
   public
   def initialize(data={})
     @cancelled = false
@@ -85,12 +92,12 @@ module LogStash::EventV1
   # field-related access
   public
   def [](key)
-    # TODO(sissel): Implement
+    @data[key]
   end # def []
   
   public
   def []=(key, value)
-    # TODO(sissel): Implement
+    @data[key] = value
   end # def []=
 
   public
@@ -176,10 +183,12 @@ module LogStash::EventV1
           format = key[1 .. -1]
           datetime.toString(format) # return requested time format
         end
+      elsif key[0,1] == "+["
+
       else
         # Use an event field.
         value = self[key]
-
+        puts key
         case value
         when nil
           tok # leave the %{foo} if this field does not exist in this event.
@@ -193,4 +202,14 @@ module LogStash::EventV1
       end
     end
   end # def sprintf
+
+  #Temporary hack to get around the use of things like event.source or event.tags. 
+  #REMOVE BEFORE 1.2 release
+  def method_missing(method, *args, &block)
+    if method.to_s =~ /(.*)=$/
+      self[method]= args
+    else
+      self[method]
+    end
+  end
 end # module LogStash::EventV1
