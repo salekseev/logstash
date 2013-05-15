@@ -4,11 +4,11 @@ require "insist"
 describe LogStash::Event do
   before :each do
     @event = LogStash::Event.new
-    @event.timestamp = "2013-01-01T00:00:00.000Z"
-    @event.type = "sprintf"
-    @event.message = "hello world"
-    @event.tags = [ "tag1" ]
-    @event.source = "/home/foo"
+    @event["@timestamp"] = "2013-01-01T00:00:00.000Z"
+    @event["@type"] = "sprintf"
+    @event["@message"] = "hello world"
+    @event["@tags"] = [ "tag1" ]
+    @event["@source"] = "/home/foo"
     @event["@fields"] = { 
         "a" => "b", 
         "c" => {
